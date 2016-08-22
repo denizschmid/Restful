@@ -10,6 +10,19 @@
 		protected $_database;
 		
 		/**
+		 * Wird hier eine Zusammenfassung der Daten erwartet? Dient nur zur Minimierung
+		 * der übertragenen Daten.
+		 * @var boolean
+		 */
+		private $_isSummary;
+		
+		/**
+		 * Der Content-Type der Antwort.
+		 * @var string
+		 */
+		private $_contentType;
+		
+		/**
 		 * @var Restful
 		 */
 		private $_parent;
@@ -77,6 +90,7 @@
 		 */
 		public function setParent( Restful $parent ) {
 			$this->_parent = $parent;
+			$this->_isSummary = array_key_exists("summary", $this->_parent->getRequest()->getParams());
 		}
 		
 		/**
@@ -90,6 +104,11 @@
 			}
 			return $table;
 		}
+		
+		private function _init() {
+			$this->_contentType = $this->_parent->getResponse()->getSupportedContentType();
+		}
+		
 		/**
 		 * Ermittelt eine Ressource anhand der Anfrage.
 		 * 
@@ -101,10 +120,11 @@
 		 * @return mixed|boolean Ressource oder FALSE im Fehlerfall
 		 */
 		public function getResource( $table=NULL ) {
+			$this->_init();
 			$table = $this->_getTable($table);
 			$id = $this->_parent->getRequest()->getIdFromPath();
 			if( $id === FALSE ) {
-				$this->_parent->getResponse()->setData($this->getResources($table));
+				$this->getResources($table);
 				return $this->_parent->getResponse()->getData();
 			}
 			$result = $this->_getResource($id, $table);
@@ -115,9 +135,10 @@
 				$this->_parent->getResponse()->_404_notFound("", []);
 				return [];
 			} else {
-				$this->_formatResource($result);
+				$original = $result;
+				$this->_formatResource($result, 1, $this->_isSummary, $this->_contentType);
 				$this->_parent->getResponse()->setData($result);
-				return $this->_parent->getResponse()->getData();
+				return $original;
 			}
 		}
 		
@@ -133,6 +154,7 @@
 		protected function getResources( $table=NULL) {
 			$table = $this->_getTable($table);
 			$data = $this->_parent->getRequest()->getParams();
+			unset($data["summary"]);
 			$result = $this->_getResources($data, $table);
 			if( $result === FALSE ) {
 				$this->_parent->getResponse()->_400_badRequest();
@@ -141,11 +163,10 @@
 				if( $result === NULL ) {
 					$result = [];
 				}
-				$result = array_map(function( $resource ) {
-					return $this->_formatResource($resource);
-				}, $result);
+				$original = $result;
+				$this->_formatResource($result, sizeof($result), $this->_isSummary, $this->_contentType);
 				$this->_parent->getResponse()->setData($result);
-				return $this->_parent->getResponse()->getData();
+				return $original;
 			}
 		}
 		
@@ -164,9 +185,10 @@
 				$this->_parent->getResponse()->_400_badRequest();
 				return;
 			} else {
-				$this->_formatResource($result);
+				$original = $result;
+				$this->_formatResource($result, sizeof($result), $this->_isSummary, $this->_contentType);
 				$this->_parent->getResponse()->setData($result);
-				return $this->_parent->getResponse()->getData();
+				return $original;
 			}
 		}
 		
@@ -197,15 +219,16 @@
 				if( $id !== FALSE ) {
 					$data["id"] = $id;
 				}
+				$original = $result;
 				if( $data == $result ) {
-					$this->_formatResource($result);
+					$this->_formatResource($result, 1, $this->_isSummary, $this->_contentType);
 					$this->_parent->getResponse()->_200_ok("", $result);
 				} else {
-					$this->_formatResource($result);
+					$this->_formatResource($result, 1, $this->_isSummary, $this->_contentType);
 					$this->_parent->getResponse()->_201_created("", $result);
 				}
 				$this->_parent->getResponse()->setData($result);
-				return $this->_parent->getResponse()->getData();
+				return $original;
 			}
 		}
 		
@@ -245,7 +268,12 @@
 		 * @param mixed $data
 		 * @return mixed
 		 */
-		protected function _formatResource( &$data ) {
+		protected function _formatResource( &$data, $resultCount, $summary=FALSE, $contentType="application/json" ) {
+			if( $contentType === "application/json" || $contentType === "text/html" ) {
+				$data = RestfulResponse::toJson($data);
+			} else if( $contentType === "application/xml" ) {
+				$data = RestfulResponse::toXml($data, $resultCount);
+			}
 			return $data;
 		}
 		

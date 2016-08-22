@@ -65,12 +65,12 @@
 				return NULL;
 			}
 			$method = $_SERVER['REQUEST_METHOD'];
-			$json = $this->{$method}($url);
-			if( $json === FALSE ) {	
+			$content = $this->{$method}($url);
+			if( $content === FALSE ) {	
 				$this->response->_404_notFound("", []);
 				return TRUE;
 			}
-			$this->response->setData($this->parseResponse($json));
+			$this->response->setData($content);
 			return TRUE;
 		}
 		
@@ -190,16 +190,5 @@
 			$context  = stream_context_create($options);
 			$result = file_get_contents($url, false, $context);
 			return $result;
-		}
-		
-		
-		/**
-		 * Erstellt aus einem JSON-String ein Array
-		 * @param string $json
-		 * @return array
-		 */
-		private function parseResponse( $json ) {
-			$response = json_decode($json);
-			return (array)$response;
 		}
 	}

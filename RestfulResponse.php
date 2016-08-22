@@ -37,7 +37,7 @@
 		/**
 		 * Wandelt die Daten in ein Array um
 		 */
-		public function toArray() {
+		public static function toArray() {
 			if( !is_array($this->_data) ) {
 				return $this->_data = [$this->data];
 			}
@@ -46,17 +46,24 @@
 		/**
 		 * Wandelt die Daten in einen JSON-String um
 		 */
-		public function toJson() {
-			$this->_data = json_encode($this->_data);
+		public static function toJson( $data ) {
+			return json_encode($data);
 		}
 		
 		/**
 		 * Wandelt die Daten in einen XML-String um
 		 */
-		public function toXml() {
-			$xml = new SimpleXMLElement("<root/>");
-			array_walk_recursive($this->_data, array ($xml, "addChild"));
-			$this->_data = $xml->asXML();
+		public static function toXml( $data ) {
+			$xml = new \SimpleXMLElement("<root/>");
+			if( array_keys($data) !== range(0, count($data) - 1) ) {
+				array_walk_recursive(array_flip($data), array ($xml, "addChild"));
+			} else {
+				foreach( $data as $d ) {
+					array_walk_recursive(array_flip($d), array ($xml, "addChild"));
+				}
+			}
+			var_dump($xml->asXML());exit;
+			return $xml->asXML();
 		}
 		
 		/**
@@ -66,12 +73,16 @@
 		 * @return string|boolean Content-Type oder FALSE fall keine Übereinstimmung
 		 */
 		public function getSupportedContentType( $allowedContentTypes=[] ) {
+			if( isset($this->_contentType) ) {
+				return $this->_contentType;
+			}
 			if( is_string($allowedContentTypes) ) {
 				$allowedContentTypes = [$allowedContentTypes];
 			}
 			$acceptedTypes = explode(",", $_SERVER["HTTP_ACCEPT"]);
 			foreach( $acceptedTypes as $type ) {
 				if( in_array($type, $allowedContentTypes) ) {
+					$this->_contentType = $type;
 					return $type;
 				}
 			}
@@ -95,7 +106,7 @@
 		 * @return mixed
 		 */
 		public function getData() {
-			return empty($this->_data) ? [] :  $this->_data;
+			return $this->_data;
 		}
 		
 		/**
