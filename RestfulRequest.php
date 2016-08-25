@@ -117,6 +117,15 @@
 		public function getRelationFromPath() {
 			return sizeof($this->path)>2 ? $this->path[2] : FALSE;
 		}
+        
+        /**
+		 * Ermittelt die Sub-Ressource aus der Pfadangabe:
+		 * http://ws.example.com/docs/documentations/1/groups => groups
+		 * @return string
+		 */
+		public function getAdditionalFromPath() {
+			return sizeof($this->path)>3 ? array_chunk($this->path, 3)[1] : [];
+		}
 		
 		/**
 		 * Falls eine Weiterleitung erfolgt wird hier die URL zusammengebaut,
@@ -132,6 +141,7 @@
 			$pos = strpos($_SERVER["REQUEST_URI"], $this->getResourceFromPath());
 			$url .= substr($_SERVER["REQUEST_URI"], 0, $pos);
 			$url .= ltrim($redirectTo, "/");
+            $url .= "/".implode("/", $this->getAdditionalFromPath());
 			return $url;
 		}		
 		
