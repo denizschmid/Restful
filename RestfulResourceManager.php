@@ -137,7 +137,7 @@
 			} else {
                 $this->_extendResource($result);
 				$original = $result;
-				$this->_formatResource($result, 1, $this->_isSummary, $this->_contentType);
+				$this->_beforeSend($result, 1, $this->_isSummary, $this->_contentType);
 				$this->_parent->getResponse()->setData($result);
 				return $original;
 			}
@@ -169,7 +169,7 @@
                     $this->_extendResource($res);
                     $original[] = $res;
                 }
-				$this->_formatResource($result, sizeof($result), $this->_isSummary, $this->_contentType);
+				$this->_beforeSend($result, sizeof($result), $this->_isSummary, $this->_contentType);
 				$this->_parent->getResponse()->setData($result);
 				return $original;
 			}
@@ -195,7 +195,7 @@
                     $this->_extendResource($res);
                     $original[] = $res;
                 }
-				$this->_formatResource($result, sizeof($result), $this->_isSummary, $this->_contentType);
+				$this->_beforeSend($result, sizeof($result), $this->_isSummary, $this->_contentType);
 				$this->_parent->getResponse()->setData($result);
 				return $original;
 			}
@@ -230,10 +230,10 @@
 				}
 				$this->_extendResource($result);
 				if( $data == $result ) {
-					$this->_formatResource($result, 1, $this->_isSummary, $this->_contentType);
+					$this->_beforeSend($result, 1, $this->_isSummary, $this->_contentType);
 					$this->_parent->getResponse()->_200_ok("", $result);
 				} else {
-					$this->_formatResource($result, 1, $this->_isSummary, $this->_contentType);
+					$this->_beforeSend($result, 1, $this->_isSummary, $this->_contentType);
 					$this->_parent->getResponse()->_201_created("", $result);
 				}
 				$this->_parent->getResponse()->setData($result);
