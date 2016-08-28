@@ -135,6 +135,7 @@
 				$this->_parent->getResponse()->_404_notFound("", []);
 				return [];
 			} else {
+                $this->_extendResource($result);
 				$original = $result;
 				$this->_formatResource($result, 1, $this->_isSummary, $this->_contentType);
 				$this->_parent->getResponse()->setData($result);
@@ -163,7 +164,11 @@
 				if( $result === NULL ) {
 					$result = [];
 				}
-				$original = $result;
+                $original = [];
+                foreach( $result as $res ) {
+                    $this->_extendResource($res);
+                    $original[] = $res;
+                }
 				$this->_formatResource($result, sizeof($result), $this->_isSummary, $this->_contentType);
 				$this->_parent->getResponse()->setData($result);
 				return $original;
@@ -185,7 +190,11 @@
 				$this->_parent->getResponse()->_400_badRequest();
 				return;
 			} else {
-				$original = $result;
+				$original = [];
+                foreach( $result as $res ) {
+                    $this->_extendResource($res);
+                    $original[] = $res;
+                }
 				$this->_formatResource($result, sizeof($result), $this->_isSummary, $this->_contentType);
 				$this->_parent->getResponse()->setData($result);
 				return $original;
@@ -219,7 +228,7 @@
 				if( $id !== FALSE ) {
 					$data["id"] = $id;
 				}
-				$original = $result;
+				$this->_extendResource($result);
 				if( $data == $result ) {
 					$this->_formatResource($result, 1, $this->_isSummary, $this->_contentType);
 					$this->_parent->getResponse()->_200_ok("", $result);
@@ -228,7 +237,7 @@
 					$this->_parent->getResponse()->_201_created("", $result);
 				}
 				$this->_parent->getResponse()->setData($result);
-				return $original;
+				return $result;
 			}
 		}
 		
