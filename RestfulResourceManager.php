@@ -262,13 +262,24 @@
 				return TRUE;
 			}
 		}
-		
-		/**
+        
+        /**
+         * Nachdem die Ressource ermittelt wurde, kann diese mit dieser Methode
+         * mit Daten angereichert werden. 
+         * @param array $resource
+         * @return boolean
+         */
+        protected function _extendResource( &$resource ) {
+            return TRUE;
+        } 
+
+
+        /**
 		 * Formatiert die Ressource, bevor sie als Antwort geschickt wird.
 		 * @param mixed $data
 		 * @return mixed
 		 */
-		protected function _formatResource( &$data, $resultCount, $summary=FALSE, $contentType="application/json" ) {
+		protected function _beforeSend( &$data, $resultCount, $summary=FALSE, $contentType="application/json" ) {
 			if( $contentType === "application/json" || $contentType === "text/html" ) {
 				$data = RestfulResponse::toJson($data);
 			} else if( $contentType === "application/xml" ) {

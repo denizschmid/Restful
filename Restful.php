@@ -1,8 +1,10 @@
 <?php
 	namespace Dansnet\Webservice;
+    require_once "RestfulUtil.php";
 	require_once "RestfulRequest.php";
 	require_once "RestfulResponse.php";
 	require_once "RestfulResourceManager.php";
+	require_once "RestfulError.php";
 
 	/**
 	 * Restful unterstützt das Lesen von HTTP-Request und die Erzeugung von korrekten

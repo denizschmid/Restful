@@ -12,9 +12,9 @@
 		
 		/**
 		 * Fehler
-		 * @var mixed 
+		 * @var array 
 		 */
-		private $_error;
+		private $_errors;
 		
 		/**
 		 * HTTP-Status-Code
@@ -79,6 +79,15 @@
 			if( is_string($allowedContentTypes) ) {
 				$allowedContentTypes = [$allowedContentTypes];
 			}
+			if( !array_key_exists("HTTP_ACCEPT", $_SERVER) ) {
+				if( sizeof($allowedContentTypes) > 0 ) {
+					$this->_contentType = $allowedContentTypes[0];
+					return $this->_contentType;
+				} else {
+					$this->_415_unsupportedMediaType();
+					return FALSE;
+				}
+			}
 			$acceptedTypes = explode(",", $_SERVER["HTTP_ACCEPT"]);
 			foreach( $acceptedTypes as $type ) {
 				if( in_array($type, $allowedContentTypes) ) {
@@ -101,12 +110,16 @@
 		}
 		
 		/**
-		 * Gibt die Antwortdaten zurück. Falls die Antwort leer ist, wird automatisch
-		 * ein leeres Array erzeugt.
+		 * Gibt die Antwortdaten zurück. Falls der HTTP-Status-Code einem Fehlercode
+		 * entspricht (>=400), wird als Inhalt die Fehlerliste gesetzt.
 		 * @return mixed
 		 */
 		public function getData() {
-			return $this->_data;
+			if( $this->_httpCode < 400 ) {
+				return $this->_data;
+			} else {
+				return RestfulError::toArrays($this->_errors);
+			}
 		}
 		
 		/**
@@ -126,11 +139,24 @@
 		}
 		
 		/**
-		 * Setzt die Fehler.
-		 * @param mixed $error
+		 * Fügt einen Fehler der Fehlerliste hinzu.
+		 * @param \Dansnet\Webservice\RestfulError $error
 		 */
-		public function setError( $error ) {
-			$this->_error = $error;
+		public function addError( RestfulError $error ) {
+			$this->_errors[] = $error;
+		}
+		
+		/**
+		 * Setzt die Fehler. Ein Fehler ist vom Typ RestfulError.
+		 * @param array $errors
+		 * @return boolean TRUE oder FALSE im Fehlerfall
+		 */
+		public function setError( array $errors ) {
+			if( sizeof($errors) > 0 && !$errors[0] instanceof RestfulError ) {
+				return FALSE;
+			}
+			$this->_errors = $errors;
+			return TRUE;
 		}
 		
 		/**
@@ -138,7 +164,7 @@
 		 * @return mixed
 		 */
 		public function getError() {
-			return empty($this->_error) ? [] :  $this->_error;
+			return empty($this->_errors) ? [] :  $this->_errors;
 		}
 		
 		/**
@@ -247,6 +273,7 @@
 			} else {
 				$this->_message = $message;
 			}
+			$this->addError(new RestfulError($this->_httpCode, $this->_message, RestfulError::URL_400));
 		}
 		
 		/**
@@ -262,6 +289,7 @@
 			} else {
 				$this->_message = $message;
 			}
+			$this->addError(new RestfulError($this->_httpCode, $this->_message, RestfulError::URL_401));
 		}
 		
 		/**
@@ -277,6 +305,7 @@
 			} else {
 				$this->_message = $message;
 			}
+			$this->addError(new RestfulError($this->_httpCode, $this->_message, RestfulError::URL_403));
 		}
 		
 		/**
@@ -292,6 +321,7 @@
 			} else {
 				$this->_message = $message;
 			}
+			$this->addError(new RestfulError($this->_httpCode, $this->_message, RestfulError::URL_404));
 		}
 		
 		/**
@@ -307,6 +337,7 @@
 			} else {
 				$this->_message = $message;
 			}
+			$this->addError(new RestfulError($this->_httpCode, $this->_message, RestfulError::URL_405));
 		}
 		
 		/**
@@ -322,6 +353,7 @@
 			} else {
 				$this->_message = $message;
 			}
+			$this->addError(new RestfulError($this->_httpCode, $this->_message, RestfulError::URL_410));
 		}
 		
 		/**
@@ -337,6 +369,7 @@
 			} else {
 				$this->_message = $message;
 			}
+			$this->addError(new RestfulError($this->_httpCode, $this->_message, RestfulError::URL_415));
 		}
 		
 		/**
@@ -352,6 +385,7 @@
 			} else {
 				$this->_message = $message;
 			}
+			$this->addError(new RestfulError($this->_httpCode, $this->_message, RestfulError::URL_422));
 		}
 		
 		/**
@@ -367,6 +401,7 @@
 			} else {
 				$this->_message = $message;
 			}
+			$this->addError(new RestfulError($this->_httpCode, $this->_message, RestfulError::URL_429));
 		}
 		
 		/**

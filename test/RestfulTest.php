@@ -4,7 +4,7 @@
 	//require_once "../bower_components/DataAccessObject/DataAccessObject.php";
 	
 	use Dansnet\Webservice\Restful;
-	//use Dansnet\DataAccessObject;
+	use Dansnet\Webservice\RestfulUtil;
 	
 	class RestfulTest extends PHPUnit_Framework_TestCase  {
 		
@@ -70,12 +70,31 @@
 		
 		public function testResources() {
 			$restful1 = new Restful("myresources", [], ["1"], new ResourceManager());
-			$restful2 = new Restful("myresources", [], ["2"], new ResourceManager());
 			$restful3 = new Restful("myresources", ["key1"=>"value3"], [], new ResourceManager());
+			$restful1->getResponse()->getSupportedContentType("json");
+			$restful3->getResponse()->getSupportedContentType("json");
 			$this->assertEquals(["id"=>1, "key1"=>"value1"] , $restful1->getResources()->getResource());
 			$this->assertEquals([["id"=>3, "key1"=>"value3"]] , $restful3->getResources()->getResource());
 		}
+		
+		public function testErrors() {
+			$restful1 = new Restful("myresources", [], ["100"], new ResourceManager());
+			$this->assertEquals([] , $restful1->getResources()->getResource());
+			$this->assertEquals(2 , sizeof($restful1->getResponse()->getData()));
+			$this->assertEquals(415 , $restful1->getResponse()->getData()[0]["code"]);
+			$this->assertEquals(404 , $restful1->getResponse()->getData()[1]["code"]);
 			
+			$restful2 = new Restful("myresources", [], ["100"], new ResourceManager());
+			$this->assertEquals("json", $restful2->getResponse()->getSupportedContentType("json"));
+			$this->assertEquals([] , $restful2->getResources()->getResource());
+			$this->assertEquals(1 , sizeof($restful2->getResponse()->getData()));
+			$this->assertEquals(404 , $restful2->getResponse()->getData()[0]["code"]);
+		}
+        
+        public function testUtil() {
+            $array = ["name"=>"Test","text"=>"Testtext","groupname"=>"Testgruppe","parent_id"=>-1];
+            RestfulUtil::ArrayChunk($array, ["groupname","parent_id"]);
+        }
 	}
 	
 	class ResourceManager extends \Dansnet\Webservice\RestfulResourceManager {
